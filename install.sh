@@ -130,6 +130,7 @@ baseDomain: ${OPENSHIFT_BASEDOMAIN}
 proxy:
   httpProxy: ${HTTP_PROXY}
   httpsProxy: ${HTTPS_PROXY}
+  noProxy: ${NO_PROXY}
 compute:
 - hyperthreading: Enabled
   name: worker
