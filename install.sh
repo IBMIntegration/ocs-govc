@@ -228,7 +228,7 @@ function create_all_vms() {
     fi
     create_vm ${WORKER_CPU} ${WORKER_MEM} ${WORKER_DISK} ${WORKER_HOSTNAME[$i]}
   done
-  
+
   if [[ "${STORAGE_COUNT}" -gt "0" ]]; then
     for i in ${!STORAGE_HOSTNAME[@]}; do
       let c=$i+1
@@ -242,7 +242,7 @@ function create_all_vms() {
 
 function wait_for_cluster() {
   FOLDER="/${VSPHERE_DATACENTER}/vm/${VSPHERE_FOLDER}"
-  binaries/openshift-install --dir="${OPENSHIFT_CLUSTERNAME}" wait-for bootstrap-complete
+  binaries/openshift-install --dir="${OPENSHIFT_CLUSTERNAME}" wait-for bootstrap-complete --log-level debug
   #binaries/govc vm.destroy /"${FOLDER}/${BOOTSTRAP_HOSTNAME}"
   binaries/openshift-install --dir="${OPENSHIFT_CLUSTERNAME}" wait-for install-complete
 }
