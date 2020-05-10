@@ -177,7 +177,7 @@ def validate_api_server():
         incrementFailures()
 
     api_int = "api-int" + "." + cluster + "." + domain
-    message = api_int + "=" + default_ingress_load_balancer_ip
+    message = api_int + "=" + api_load_balancer_ip
     try:
         nslookup = socket.gethostbyaddr(api_int)
     except (socket.gaierror, socket.herror):
