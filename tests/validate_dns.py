@@ -51,16 +51,16 @@ def validate_forward_reverse(hostname_ip_address_dictionary):
         found = True
         try:
             nslookup = socket.gethostbyaddr(fqdn)
-        except socket.gaierror:
+        except (socket.gaierror, socket.herror):
             found = False
-            print(forward_description + ": Failed");
+            print(forward_description + ": Failed")
             incrementFailures()
 
         if found:
             if nslookup[2].pop() == expected_ip:
                 print(forward_description + ": Passed")
             else:
-                print(forward_description + ": Failed");
+                print(forward_description + ": Failed")
                 incrementFailures()
         else:
             print(forward_description + ": Failed")
@@ -70,7 +70,7 @@ def validate_forward_reverse(hostname_ip_address_dictionary):
         found = True
         try:
             nslookup = socket.gethostbyaddr(expected_ip)
-        except socket.gaierror:
+        except (socket.gaierror, socket.herror):
             found = False
             print(reverse_description + ": Failed");
 
@@ -177,10 +177,10 @@ def validate_api_server():
         incrementFailures()
 
     api_int = "api-int" + "." + cluster + "." + domain
-    message = api_int + "=" + api_load_balancer_ip
+    message = api_int + "=" + default_ingress_load_balancer_ip
     try:
-        nslookup = socket.gethostbyaddr(api)
-    except socket.gaierror:
+        nslookup = socket.gethostbyaddr(api_int)
+    except (socket.gaierror, socket.herror):
         found = False
 
     if found:
@@ -203,7 +203,7 @@ def validate_apps():
     endpoint = "portal" + "." + "apps" + "." + cluster + "." + domain
     try:
         nslookup = socket.gethostbyaddr(endpoint)
-    except socket.gaierror:
+    except (socket.gaierror, socket.herror):
         found = False
 
     if found:
