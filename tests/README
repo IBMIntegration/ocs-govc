@@ -1,0 +1,9 @@
+To run the pre-install test
+1. Validate you have pip installed
+   - Run `pip`.  If you get an error:
+        - Run `sudo curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py`
+        - Run `sudo python get-pip.py`
+
+2. Install dnspython: `sudo pip install dnspython`
+3. Create a file named <cluster_name>.cfg and populate with values for your environment
+4. To run the pre-install test, run `python validate_dns.py <cluster_name>`, e.g., python validate_dns.py mali

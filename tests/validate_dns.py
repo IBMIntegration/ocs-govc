@@ -4,11 +4,16 @@ import os
 import socket
 import collections
 from collections import OrderedDict
-
+import sys
 # import srvlookup
 # import dnslib
-# import dns.resolver
+import dns
+import dns.resolver
+
 # from dnslib import DNSRecord, DNSQuestion, QTYPE
+
+
+env = sys.argv[1]
 
 
 def incrementFailures():
@@ -34,7 +39,7 @@ def build_ordered_dictionary(config, section):
     return dictionary
 
 
-def validate_forward_reverse (hostname_ip_address_dictionary):
+def validate_forward_reverse(hostname_ip_address_dictionary):
     for host in hostname_ip_address_dictionary:
 
         expected_ip = hostname_ip_address_dictionary[host]
@@ -83,26 +88,40 @@ def validate_forward_reverse (hostname_ip_address_dictionary):
             incrementFailures()
 
 
-# def lookup_service_record(cluster, domain):
-#     global failures
-#     found = True
-#     service_name = "etcd-server-ssl"
-#     print("\nValidating service record " + service_name)
-#
-#     try:
-#         service = srvlookup.lookup(service_name, "tcp", cluster + "." + domain)
-#         print("Hello")
-#     except srvlookup.SRVQueryFailure:
-#         found = False
-#
-#     if found:
-#         print("Service found")
-#     else:
-#         print("Service Not found")
+def validate_service_record():
+
+    found = True
+    service_name = '_etcd-server-ssl._tcp' + "." + cluster + "." + domain
+
+
+    try:
+        srv_records = {}
+        srv_records = dns.resolver.query(service_name, 'SRV')
+        response = srv_records.response
+        answer_list = response.answer
+
+        records = answer_list.pop()
+        print('Service record ' + service_name + ' found: Passed')
+
+        # Validate the answer list contains the number of items in the control plane
+        message = "Number of items in service record=" + str(len(control_plane))
+        if len(records) == len(control_plane):
+            print( message + ": Passed")
+        else:
+            print(message + ": Failed")
+            incrementFailures()
+
+        # Validate items in the service record
+
+    except:
+        found = False
+
+    if not found:
+        print('Service record ' + service_name + ' found: Failed')
+        incrementFailures()
 
 
 def validate_etcd_names(control_plane):
-
     i = 0
     for host in control_plane:
 
@@ -114,8 +133,9 @@ def validate_etcd_names(control_plane):
         try:
             nslookup = socket.gethostbyaddr(etcd)
 
-        except socket.gaierror:
+        except (socket.gaierror, socket.herror):
             found = False
+            incrementFailures()
 
         # when multiple masters, this is what is returned
         # ('avsddslapic1.stageapi.mskcc.org', [], ['172.22.86.211'])
@@ -179,7 +199,7 @@ def validate_apps():
 
     apps = "*" + "." + "apps" + "." + cluster + "." + domain
     expected_ip = default_ingress_load_balancer_ip
-    message = apps + ": " + default_ingress_load_balancer_ip
+    message = apps + "=" + default_ingress_load_balancer_ip
     endpoint = "portal" + "." + "apps" + "." + cluster + "." + domain
     try:
         nslookup = socket.gethostbyaddr(endpoint)
@@ -203,7 +223,7 @@ raw_config = ConfigParser.RawConfigParser()
 global failures
 failures = 0
 
-config.read('cluster.cfg')
+config.read(env + '.cfg')
 cluster = config.get('network', 'cluster')
 domain = config.get('network', 'domain')
 
@@ -212,13 +232,13 @@ workers = build_ordered_dictionary(config, 'workers')
 api_load_balancer_ip = config.get('load_balancers', 'api')
 default_ingress_load_balancer_ip = config.get('load_balancers', 'ingress')
 
-print("Validating forward and reverse nslookups for control plane")
+print("Validating forward and reverse nslookups of control plane")
 validate_forward_reverse(control_plane);
 
-print("\n\nValidating forward and reverse nslookups for worker nodes")
-validate_forward_reverse( workers );
-# print("\nValidating service record")
-# lookup_service_record(cluster, domain)
+print("\n\nValidating forward and reverse nslookups of worker nodes")
+validate_forward_reverse(workers);
+print("\nValidating service record");
+validate_service_record()
 
 print("\nValidating etcd member DNS updates")
 validate_etcd_names(control_plane)
@@ -230,4 +250,4 @@ print("\nValidating Routes DNS updates")
 validate_apps()
 
 print("\n**********************")
-print("Total validation failures: " + str(failures))
+print("Total number of validation failures: " + str(failures))
